@@ -5,11 +5,10 @@ const userSchema = new Schema({
   lastName: String,
   avatar: String,
   email: { type: String, unique: true },
-  phone: Number,
+  phone: String,
   date: String,
 });
 
 const Users = models.user || model("user", userSchema);
 
 export default Users;
-

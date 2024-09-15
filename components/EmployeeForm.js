@@ -6,31 +6,42 @@ import { toast } from "react-toastify";
 import { useEffect } from "react";
 import { useQueryClient } from "react-query";
 
-export const EmployeeForm = ({ employeeId }) => {
+const handleImage = async (file) => {
+  const formData = new FormData();
+  const options = {
+    maxSizeMB: 1,
+    maxWidthOrHeight: 1920,
+    useWebWorker: true,
+  };
+  try {
+    const compressedImage = await imageCompression(file, options);
+    formData.append("image", compressedImage);
+  } catch (e) {
+    formData.append("image", file);
+  }
+  const response = await fetch("/api/upload", {
+    method: "POST",
+    body: formData,
+  });
+  if (!response.ok) return;
+  return (await response.json()).url;
+};
+
+export const EmployeeForm = ({ employee }) => {
   const { reset, register, handleSubmit, formState } = useForm();
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const fetchEmployee = async () => {
-      if (employeeId) {
-        const response = await axiosClient.get(`/api/users/${employeeId}`);
-        reset(response.data);
-      }
-    };
+    if (employee) reset(employee);
+  }, []);
 
-    fetchEmployee();
-
-    return () => {};
-  }, [employeeId]);
-
-  const submit = async (employee) => {
-    delete employee.avatar;
-    if (employeeId) {
+  const submit = async (data) => {
+    if (data.avatar instanceof FileList) {
+      data.avatar = await handleImage(data.avatar[0]);
+    }
+    if (employee) {
       try {
-        const response = await axiosClient.put(
-          `/api/users/${employeeId}`,
-          employee
-        );
+        await axiosClient.put(`/api/users/${employee._id}`, data);
         toast("Employee updated successfully!");
         queryClient.refetchQueries({ queryKey: ["users"] });
       } catch (e) {
@@ -38,7 +49,7 @@ export const EmployeeForm = ({ employeeId }) => {
       }
     } else {
       try {
-        const response = await axiosClient.post("/api/users", employee);
+        await axiosClient.post("/api/users", data);
         toast("New employee added successfully!");
         reset();
       } catch (e) {
@@ -72,13 +83,13 @@ export const EmployeeForm = ({ employeeId }) => {
         type="date"
       />
       <Input
-        {...register("avatar")}
+        {...register("avatar", { required: true })}
         placeholder="Enter profile pic"
         type="file"
         accept="img/*"
       />
       <Button className="w-full" disabled={!formState.isValid}>
-        {employeeId ? "Update" : "Add"}
+        {employee ? "Update" : "Add"}
       </Button>
     </form>
   );

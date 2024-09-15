@@ -14,17 +14,7 @@ export default apiMiddleware(async function handler(req, res) {
 
   switch (method) {
     case "GET":
-      // Check if query parameters are provided for searching
-      const { name, email, phone, date } = req.query;
-
-      if (name || email || phone || date) {
-        // If any search query is provided, call the searchUsers function
-        return await searchUsers(req, res);
-      } else {
-        // Otherwise, return all users
-        return await getUsers(req, res);
-      }
-
+      return await getUsers(req, res);
     case "POST":
       return postUser(req, res);
     case "PUT":
@@ -35,4 +25,3 @@ export default apiMiddleware(async function handler(req, res) {
       throw new HttpError(405, "Method not allowed");
   }
 });
-

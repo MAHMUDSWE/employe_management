@@ -8,8 +8,8 @@ const NavItem = ({ text, url }) => {
   return (
     <Link href={url} className="w-full">
       <div
-        className={`w-full hover:border-l-black text-sm p-3 bg-white border-gray-200 border ${
-          pathname == url && "border-l-black"
+        className={`w-full hover:border-l-black hover:border-l-[2px] text-sm p-3 bg-white border-gray-200 border ${
+          pathname == url && "border-l-black border-l-[2px]"
         }`}
       >
         {text}
@@ -26,12 +26,12 @@ export const Layout = ({ children }) => {
           EMPLOYEE MANAGEMENT SYSTEM
         </h1>
       </header>
-      <main className="flex w-screen h-full overflow-hidden">
-        <aside className="w-64 border-r p-4 h-[calc(100vh-70px)] flex gap-3 flex-col items-center border-gray-200">
+      <main className="flex w-screen h-[calc(100vh-70px)] overflow-hidden">
+        <aside className="w-64 border-r p-4 h-full flex gap-3 flex-col items-center border-gray-200">
           <NavItem text="EMPLOYEES" url="/" />
           <NavItem text="ADD NEW" url="/new" />
         </aside>
-        <section className="flex-1 p-4 w-full h-full overflow-auto">
+        <section className="flex-1 p-4 w-full h-full overflow-hidden">
           {children}
         </section>
       </main>

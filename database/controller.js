@@ -2,8 +2,42 @@ import { HttpError } from "../lib/http-error";
 import Users from "../model/user";
 
 export async function getUsers(req, res) {
-  const users = await Users.find({});
-  return users;
+  const {
+    search,
+    page = 1,
+    size = 6,
+    sort_by = "createdAt",
+    order = 1,
+  } = req.query;
+  const searchCriteria = {};
+  if (search) {
+    const regex = { $regex: search, $options: "i" };
+    searchCriteria.$or = [
+      { firstName: regex },
+      {
+        lastName: regex,
+      },
+      {
+        phone: search,
+      },
+      {
+        email: regex,
+      },
+    ];
+  }
+
+  const users = await Users.find(searchCriteria)
+    .sort({ [sort_by]: +order })
+    .skip((page - 1) * size)
+    .limit(size);
+
+  const totalCount = await Users.find(searchCriteria).countDocuments();
+
+  return {
+    users,
+    totalPage: Math.ceil(totalCount / size),
+    isLastPage: totalCount <= page * size,
+  };
 }
 
 export async function getUser(req, res) {
@@ -18,13 +52,13 @@ export async function getUser(req, res) {
 }
 
 export async function postUser(req, res) {
-  const { firstName, lastName, email, phone, date } = req.body;
+  const { firstName, avatar, lastName, email, phone, date } = req.body;
 
-  if (!firstName || !lastName || !email || !phone || !date) {
+  if (!firstName || !lastName || !avatar || !email || !phone || !date) {
     throw new HttpError(400, "Missing form data");
   }
 
-  const userData = { firstName, lastName, email, phone, date };
+  const userData = { firstName, lastName, avatar, email, phone, date };
 
   return await Users.create(userData);
 }
@@ -54,7 +88,7 @@ export async function deleteUser(req, res) {
 }
 
 export async function searchUsers(req, res) {
-  const { name, email, phone, date } = req.query;
+  const { name, email, phone, date } = req.body;
 
   const searchCriteria = {};
 
@@ -68,11 +102,7 @@ export async function searchUsers(req, res) {
     searchCriteria.phone = { $regex: phone, $options: "i" };
   }
   if (date) {
-    searchCriteria.date = { $regex: date, $options: "i" }; // Assumes date stored as string
-  }
-
-  if (Object.keys(searchCriteria).length === 0) {
-    return res.status(400).json({ error: "No search parameters provided" });
+    searchCriteria.date = new Date(date); // Assumes date stored as string
   }
 
   const users = await Users.find(searchCriteria);
