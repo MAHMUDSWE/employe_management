@@ -1,26 +1,19 @@
-import connectMongo from '../../../database/conn'
-import { getUser, putUser, deleteUser } from '../../../database/controller';
+import { getUser, putUser, deleteUser } from "../../../database/controller";
+import { apiMiddleware } from "../../../lib/api-middleware";
+import { HttpError } from "../../../lib/http-error";
 
-export default async function handler(req, res) {
-    
-        connectMongo().catch(() => res.status(405).json({ error: "Error in the Connection"}))
+export default apiMiddleware(async function handler(req, res) {
+  // type of request
+  const { method } = req;
 
-        // type of request
-        const { method } = req
-
-        switch (method){
-            case "GET":
-                getUser(req, res);
-                break;
-            case 'PUT':
-                putUser(req, res)
-                break;
-            case 'DELETE':
-                deleteUser(req, res)
-                break;
-            default : 
-                res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
-                res.status(405).end(`Method ${method} Not Allowd`)
-                break;
-        }
-}
+  switch (method) {
+    case "GET":
+      return getUser(req, res);
+    case "PUT":
+      return putUser(req, res);
+    case "DELETE":
+      return deleteUser(req, res);
+    default:
+      throw new HttpError(405, "Method not allowed");
+  }
+});
