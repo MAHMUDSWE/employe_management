@@ -69,6 +69,15 @@ export async function postUser(req, res) {
     throw new HttpError(400, "Missing form data");
   }
 
+
+  const existingUser = await Users.findOne({ email, phone });
+  if (existingUser && existingUser.email === email) {
+    throw new HttpError(409, "User with this email already exists");
+  }
+  else if (existingUser && existingUser.phone === phone) {
+    throw new HttpError(409, "User with this phone number already exists");
+  }
+
   const userData = { firstName, lastName, avatar, email, phone, date };
 
   return await Users.create(userData);
