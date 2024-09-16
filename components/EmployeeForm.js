@@ -86,7 +86,7 @@ export const EmployeeForm = ({ employee }) => {
         {...register("avatar", { required: true })}
         placeholder="Enter profile pic"
         type="file"
-        accept="img/*"
+        accept="image/*"
       />
       <Button className="w-full" disabled={!formState.isValid}>
         {employee ? "Update" : "Add"}

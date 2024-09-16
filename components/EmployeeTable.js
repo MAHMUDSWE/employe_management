@@ -15,6 +15,7 @@ import { useEffect, useRef, useState } from "react";
 import { EmployeeDeleteConfirmationModal } from "./DeleteConfirmationModal";
 import { EmployeeForm } from "./EmployeeForm";
 import { Modal } from "./Modal";
+import { useForm } from "react-hook-form";
 
 export function EmployeeTable() {
   const router = useRouter();
@@ -27,13 +28,29 @@ export function EmployeeTable() {
   const sortOrder = router.query.order;
   const sortBy = router.query.sort_by;
   const page = +router.query.page || 1;
-  const search = router.query.search || "";
-  const ref = useRef();
+  const name = router.query.name || "";
+  const date = router.query.date || "";
+  const email = router.query.email || "";
+  const phone = router.query.phone || "";
+  const { reset, handleSubmit, register } = useForm({
+    defaultValues: { name, date, email, phone },
+  });
 
   useEffect(() => {
-    if (!ref.current) return;
-    ref.current.value = search;
-  }, [search]);
+    reset({ name, date, email, phone });
+  }, [name, date, email, phone]);
+
+  const handleSearch = ({ name, date, email, phone }) => {
+    const query = { ...router.query, name, date, email, phone, page: 1 };
+    if (!name) delete query.name;
+    if (!date) delete query.date;
+    if (!email) delete query.email;
+    if (!phone) delete query.phone;
+    router.push({
+      query,
+      shallow: true,
+    });
+  };
 
   const updateQuery = (e, name) => {
     router.push({
@@ -59,21 +76,13 @@ export function EmployeeTable() {
   return (
     <>
       <div className="w-full flex flex-col h-[calc(100%-40px)]">
-        <div className="flex justify-between">
-          <form
-            className="flex w-1/3"
-            onSubmit={(e) => {
-              e.preventDefault();
-              router.push({
-                query: { ...router.query, search: ref.current.value, page: 1 },
-                shallow: true,
-              });
-            }}
-          >
-            <Input
-              ref={ref}
-              placeholder="Search by name, dob, phone or email"
-            />
+        <div className="flex gap-4 justify-between">
+          <form className="flex" onSubmit={handleSubmit(handleSearch)}>
+            <Input {...register("name")} placeholder="Enter name" />
+            <Input {...register("date")} placeholder="Enter dob" type="date" />
+            <Input {...register("phone")} placeholder="Enter phone" />
+            <Input {...register("email")} placeholder="Enter email" />
+
             <button className="h-full aspect-square flex justify-center items-center bg-gray-200">
               <BiSearch />
             </button>

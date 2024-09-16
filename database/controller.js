@@ -3,27 +3,35 @@ import Users from "../model/user";
 
 export async function getUsers(req, res) {
   const {
-    search,
     page = 1,
     size = 6,
     sort_by = "createdAt",
     order = 1,
+    name,
+    date,
+    email,
+    phone,
   } = req.query;
   const searchCriteria = {};
-  if (search) {
-    const regex = { $regex: search, $options: "i" };
+  if (name) {
+    const regex = { $regex: name, $options: "i" };
     searchCriteria.$or = [
-      { firstName: regex },
       {
         lastName: regex,
       },
       {
-        phone: search,
-      },
-      {
-        email: regex,
+        firstName: regex,
       },
     ];
+  }
+  if (date) {
+    searchCriteria.date = new Date(date);
+  }
+  if (email) {
+    searchCriteria.email = { $regex: email, $options: "i" };
+  }
+  if (phone) {
+    searchCriteria.phone = phone;
   }
 
   const users = await Users.find(searchCriteria)
@@ -52,7 +60,10 @@ export async function getUser(req, res) {
 }
 
 export async function postUser(req, res) {
-  const { firstName, avatar, lastName, email, phone, date } = req.body;
+  const { firstName, avatar, lastName, email, phone, date } =
+    Object.fromEntries(
+      Object.entries(req.body).map(([key, value]) => [key, value.trim()])
+    );
 
   if (!firstName || !lastName || !avatar || !email || !phone || !date) {
     throw new HttpError(400, "Missing form data");
